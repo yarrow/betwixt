@@ -42,3 +42,12 @@ But we don't need actual real numbers -- we need what mathematicians call a
 annotated [CoffeeScript source](src/lib/betwixt.coffee.md) for information
 about how it's done. The [specs](src/spec/betwixt-spec.coffee.md) may also be
 informative.
+
+One caveat: using Betwixt strings, we can do almost unlimited numbers of the
+insertions described above; but if we do, say a million of them, then the
+`new1000000.order` string will be something like 125,000 bytes long. Things
+will probably not be that bad in practice, since changes and insertions are
+likely to be more random in real-world applications. And Betwixt tries to
+minimize string explosion where it can. In particular, the before and after
+methods optimize the common cases where an item is inserted at the beginning or
+end of a list.
