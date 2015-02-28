@@ -1,11 +1,10 @@
 gulp = require "gulp"
 gutil = require "gulp-util"
 coffee = require "gulp-coffee"
-docco = require "gulp-docco"
 jasmine = require "gulp-jasmine"
 istanbul = require "gulp-istanbul"
 
-gulp.task "default", ["docs"]
+gulp.task "default", ["coffee"]
 
 gulp.task "coffee", ["lib-coffee", "spec-coffee"]
 
@@ -23,12 +22,7 @@ gulp.task "spec", ["coffee"], ->
   gulp.src("spec/*[sS]pec.js")
     .pipe(jasmine({verbose: false, includeStackTrace: true}))
 
-gulp.task "docs", ["coffee"], ->
-  gulp.src("src/**/*.coffee*")
-    .pipe docco({layout: "linear"})
-    .pipe gulp.dest "docs"
-
-gulp.task "cover", ["coffee"], () ->
+gulp.task "cover", ["coffee"], ->
   gulp.src("lib/*.js")
     .pipe(istanbul())
     .pipe(istanbul.hookRequire())

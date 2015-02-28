@@ -1,4 +1,4 @@
-## Betwixt
+# Betwixt
 
 Betwixt implements what mathematicians call a *dense linear order* — a datatype
 where `a < c` has the usual properties, and furthermore, given `a` and `c`
@@ -120,7 +120,7 @@ concepts are the same.
     MAX_CODE = BASE-1 # 0xffff
     ZERO = "\u0000"
     NONZERO = /[^\u0000]/
-    TRAILING_ZEROS = /\u0000+$/ 
+    TRAILING_ZEROS = /\u0000+$/
 
 Betwixt implements three main operations on strings — `Betwixt.before(s)`
 returns a string less than `s`, `Betwixt.after(s)` returns a string greater
@@ -253,7 +253,7 @@ can be represented by a single JavaScript character (in the range `\u7c19` to
       j = s.search(NONZERO)
       decrement = s.charCodeAt(j)-1
       result = appendAt(s, j, decrement)
-      
+
 But we can't return `result` quite yet — what if the first non-zero character
 of `s` is `\u0001`? Then the last character of `result` would be `ZERO` —
 `result` wouldn't be a Betwixt string. In that case we need to append an
