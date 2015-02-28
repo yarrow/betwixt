@@ -99,7 +99,8 @@ The between method
         Given -> @b = "\u2002"
         Given -> @c = "\u2003"
 
-        # **The easy parts**
+**The easy parts**
+
         describe "between trims its arguments", ->
           Then -> @Betwixt.between(@zero, @zero+@zero) == ""
         describe "Betwixt.between(x,x) returns x", ->

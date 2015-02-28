@@ -40,5 +40,5 @@ list is ordered as the user wishes.
 But we don't need actual real numbers -- we need what mathematicians call a
 *dense linear order* (without endpoints). `Betwixt` implements that — see the
 annotated [CoffeeScript source](src/lib/betwixt.coffee.md) for information
-about how it's done. The [tests](src/spec/betwixt-spec.coffee.md) may also be
+about how it's done. The [specs](src/spec/betwixt-spec.coffee.md) may also be
 informative.
