@@ -1,6 +1,6 @@
 .DS_Store
 .*.sw?
-coverage/
-node_modules/
-lib/
-spec/
+/coverage/
+/node_modules/
+/lib/
+/spec/

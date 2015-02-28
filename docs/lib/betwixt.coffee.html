@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>betwixt.coffee.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../public/stylesheets/normalize.css" />
+  <link rel="stylesheet" media="all" href="../docco.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="page">
+
+      <div class="header">
+        
+          <h1>betwixt.coffee.md</h1>
+        
+
+        
+      </div>
+
+      
+        
+        <h2 id="betwixt">Betwixt</h2>
+<p>Betwixt implements what mathematicians call a <em>dense linear order</em> — a datatype
+where <code>a &lt; c</code> has the usual properties, and furthermore, given <code>a</code> and <code>c</code>
+where <code>a &lt; c</code>, there is always a <code>b</code> such that <code>a &lt; b &lt; c</code>.</p>
+<p>Why would we want such a thing? Well, suppose we have a list of items, each
+corresponding to a record in a database, where the items (or a subset of them),
+form a list that can be re-ordered in an arbitrary fashion by the user (via a
+web page, for instance).  The straightforward way to do this is to provide each
+record with an index or weight field, and order the list by sorting on that
+field.  But if we use integers, we run into trouble.</p>
+<p>When I searched (on 2015-01-19) for database list order, <a href="http://stackoverflow.com/questions/330482/best-way-to-save-a-ordered-list-to-the-database-while-keeping-the-ordering">the</a> <a href="http://stackoverflow.com/questions/498778/how-to-save-a-particular-mutable-order-into-a-database">first</a> <a href="http://stackoverflow.com/questions/9536262/best-representation-of-an-ordered-list-in-a-database">five</a> <a href="http://dba.stackexchange.com/questions/5683/how-to-design-a-database-for-storing-a-sorted-list">Google</a> <a href="http://programmers.stackexchange.com/questions/195308/storing-a-re-orderable-list-in-a-database">links</a> were to questions on Stack Exchange
+and related sites about how to store a user-specified order in a database,
+where the items ordered were elements of, say, an online shopping cart,
+purchase order, to-do list, or similar.</p>
+<p>The usual answer is to store an integer with each record which records its slot
+in the list. A 204-record vegetable list might look like this:</p>
+<ul>
+<li><code>[0, &quot;rice&quot;]</code></li>
+<li><code>[1, &quot;cabbage&quot;]</code></li>
+<li><code>[2, &quot;mushrooms&quot;]</code></li>
+<li><code>...</code></li>
+<li><code>[202, &quot;leeks&quot;]</code></li>
+<li><code>[203, &quot;rutabagas&quot;]</code></li>
+</ul>
+<p>Moving an item up or down one slot — moving the rice item, say, so that it
+comes between cabbage and mushrooms — is straightforward. We simply swap the
+indices for rice and cabbage, so our database now has</p>
+<ul>
+<li><code>[0, &quot;cabbage&quot;]</code></li>
+<li><code>[1, &quot;rice&quot;]</code></li>
+<li><code>...</code></li>
+</ul>
+<p>The cost is just two database writes, one for rice and one for cabbage.</p>
+<p>On the other hand, if we wanted to move the <em>leeks</em> item between cabbage and
+mushrooms, we’d have to rewrite the 201 records from mushrooms to leeks. Not so
+attractive.  The secondary advice is then to leave space between the integers —
+if cabbage had an index of 8, say, and mushrooms an index of 16, then we could
+have set the new index of leeks to 12.  To add onions (say) between cabbage
+and leeks we’d set its index to 10, and to add garlic between cabbage and
+onions we’d set its index to 9:</p>
+<ul>
+<li><code>...</code></li>
+<li><code>[ 8, &quot;cabbage&quot;]</code></li>
+<li><code>[ 9, &quot;garlic&quot;]</code></li>
+<li><code>[10, &quot;onions&quot;]</code></li>
+<li><code>[12, &quot;leeks&quot;]</code></li>
+<li><code>[16, &quot;mushrooms]</code></li>
+<li><code>...</code></li>
+</ul>
+<p>Then to add something between cabbage and garlic requires us to renumber either
+cabbage (if it has not acquired an immediate predecessor in the meanwhile), or
+garlic and onions.</p>
+<p>But a dense linear order never requires renumbering: to insert a new item in
+the list we just create an index greater than the first item’s index and less
+than the second item’s index.</p>
+<p>But can we implement a dense linear order? Floating point numbers are an
+approximation of the real numbers, perhaps the most famous example of a
+dense linear order; but because floating point numbers have limited precision,
+it’s perfectly possible to have a floating point <code>a &lt; c</code> with no intermediate
+<code>b</code>. For the JavaScript Number type (64-bit IEEE floating point), you can run
+into this rather quickly: start with a two-item list, and keep inserting an
+item immediately after the first item. In about 51 steps, you’ll get two
+list items with the same rank.</p>
+<p>The rationals are almost as famous, and unlimited precision implementations of
+rationals exist Javascript (and many other languages).  We could use such a
+package for our dense linear order. But that requires us to depend on a package
+that’s full of complicated features we won’t use. Much simpler to use strings
+as keys — but strings aren’t dense:  Say we’re using strings over the
+character set “0” and “1”.  Then there is no string that’s greater than “0”
+and less than “00”. What we want is a situation where every string is padded
+to infinity with “0” characters (in which case “0” and “00” and “000” and so
+on are all equal) — or equivalently, where we remove trailing “0” characters.
+Then, between “0” and “1” is “01”; between “0” and “01” is “001” and between
+“01” and “1” is “011”.</p>
+<h2 id="binary-fractions">Binary Fractions</h2>
+<p>We’ve just re-invented binary fractions! As fractions, .0 = .00 = .000,
+and .0 &lt; .001 &lt; .01 &lt; .011 &lt; .1.</p>
+<h3 id="not-a-panacea">Not a panacea</h3>
+<p>Using a dense linear order is not a panacea: as we go (say) from .1 (one half
+written as a binary fraction) to .01 (one quarter) .001 (one eighth) to .0001
+(one sixteenth), we’re using an additional bit of space for each item. And such
+a sequence is quite possible. For instance, we might start with two items, the
+first with a rank some very small epsilon and the second with a rank of .1, and
+continually insert an item immediately after the first item.  The rank of the
+second item will initially be .1, then become .01, then .001, then .0001, and
+so forth. So the minimum number of bits needed to represent the rank of the
+second item will be N-1, where N is the number of items inserted. After a
+million items have been inserted, the second-item rank will require 125,000
+bytes to represent it.  (And there need not be a million items in the database!
+If we start with two items, insert a new item between the first two, and delete
+what is now the third item, and do that a million times, we’ll have a two-item
+database one of whose items has an enormous index field.)</p>
+<p>Things will probably not be that bad in practice. In particular, the <code>before</code>
+and <code>after</code> methods optimize the common cases where an item is inserted at the
+beginning or end of a list.  Still, as a practical matter, this binary-fraction
+implementation of a dense linear order should be restricted to lists with an
+expected maximum item count in the tens of thousands or less, and a similar
+expected maximum number of insertions or re-orderings.</p>
+<h3 id="making-betwixt-strings">Making Betwixt strings</h3>
+<p>Given that Javascript’s native character set is UCS-2, we’re actually going to
+be doing base-65536 fractions, with digits from <code>0</code> to <code>0xffff</code>. But the
+concepts are the same.</p>
+
+        
+          <div class='highlight'><pre>BASE = <span class="hljs-number">2</span>**<span class="hljs-number">16</span>
+MAX_CODE = BASE-<span class="hljs-number">1</span> <span class="hljs-comment"># 0xffff</span>
+ZERO = <span class="hljs-string">"\u0000"</span>
+NONZERO = <span class="hljs-regexp">/[^\u0000]/</span>
+TRAILING_ZEROS = <span class="hljs-regexp">/\u0000+$/</span></pre></div>
+        
+      
+        
+        <p>Betwixt implements three main operations on strings — <code>Betwixt.before(s)</code>
+returns a string less than <code>s</code>, <code>Betwixt.after(s)</code> returns a string greater
+than <code>s</code>, and <code>Betwixt.between(s,t)</code> returns a string greater than <code>s</code> and less
+than <code>t</code>.</p>
+<h3 id="trim">trim</h3>
+<p>Those operations work with zero-trimmed strings — those without trailing
+<code>ZERO</code> characters. This is required so that our linear order is actually
+dense.</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-function"><span class="hljs-title">trim</span> = <span class="hljs-params">(s)</span> -&gt;</span> s.replace(TRAILING_ZEROS, <span class="hljs-string">""</span>)</pre></div>
+        
+      
+        
+        <h3 id="validated">validated</h3>
+<p>Since we want always to be able to add items at the beginning or end of a list,
+we actually want not just a dense linear order, but a dense linear order
+<em>without endpoints</em> — that is, with no greatest or least element. Now there is
+no greatest binary (or 65536ary) fraction — we have no way to represent 1 (or
+any greater number) as a string.  But the empty string represents 0, which is
+less than any other string-representable fraction: if it ever showed up as the
+rank of a list item, there would be no way to add any items before it.</p>
+<p>Our <code>before</code>, <code>after</code>, and <code>between</code> won’t return empty strings (except for the
+call <code>between(&#39;&#39;,&#39;&#39;)</code>). But if a Betwixt user accepts a rank string from the
+wild, it will be useful first to <code>trim</code> it and secondly to throw an error if
+the trimmed string is empty.</p>
+
+        
+          <div class='highlight'><pre>DIE_ZERO_DIE = <span class="hljs-keyword">new</span> Error <span class="hljs-string">"Rank strings must be non-zero (non-empty)"</span>
+<span class="hljs-function"><span class="hljs-title">validated</span> = <span class="hljs-params">(s)</span> -&gt;</span> trim(s) <span class="hljs-keyword">or</span> <span class="hljs-keyword">throw</span> DIE_ZERO_DIE</pre></div>
+        
+      
+        
+        <p>We use <code>trim</code> internally, since the only <code>before</code> will actually choke on
+the empty string as input.</p>
+<h3 id="midpoint">MIDPOINT</h3>
+<p><code>MIDPOINT</code> is the midpoint of Betwixt’s value range. (A string with only the
+high bit set, so one-half when considered as a binary fraction.)</p>
+
+        
+          <div class='highlight'><pre>MIDPOINT = <span class="hljs-string">"\u8000"</span></pre></div>
+        
+      
+        
+        <h3 id="appendat">appendAt</h3>
+<p>In the following we’ll often want to return a prefix of a string, plus the
+increment or decrement of the string’s next character. The <code>appendAt</code> function
+helps with that: an expression like <code>appendAt(s, j, N)</code> returns a Betwixt
+string calculated from the <code>j</code>-length prefix of <code>s</code>, with a single character
+appended, whose character code is <code>N</code>. Used internally; not exported.</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-function"><span class="hljs-title">appendAt</span> = <span class="hljs-params">(s, j, N)</span> -&gt;</span> s.substr(<span class="hljs-number">0</span>, j) + String.fromCharCode(N)</pre></div>
+        
+      
+        
+        <h3 id="between">between</h3>
+<p>The workhorse method is <code>between</code>: <code>Betwixt.between(a,c)</code> returns a Betwixt
+string between <code>a</code> and <code>c</code>.</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-function"><span class="hljs-title">between</span> = <span class="hljs-params">(a, c)</span> -&gt;</span>
+  a = trim(a); c = trim(c)   <span class="hljs-comment"># Ensure canonical form</span>
+  <span class="hljs-keyword">return</span> a <span class="hljs-keyword">if</span> a == c
+  [a, c] = [c, a] <span class="hljs-keyword">if</span> c &lt; a</pre></div>
+        
+      
+        
+        <p>At this point we know that <code>a &lt; c</code>, and neither has trailing <code>ZERO</code> characters.
+We find the first <code>j</code> such that <code>lo</code> (<code>a.charAt(j)</code>) differs from (and indeed
+is less than) <code>hi</code> (<code>c.charAt(j)</code>).</p>
+
+        
+          <div class='highlight'><pre>  L = a.length
+  j = <span class="hljs-number">0</span>
+  j++ <span class="hljs-keyword">while</span> j &lt; L <span class="hljs-keyword">and</span> a.charAt(j) == c.charAt(j)
+  lo = a.charCodeAt(j)
+  hi = c.charCodeAt(j)</pre></div>
+        
+      
+        
+        <p>Usually there will be some air between <code>hi</code> and <code>lo</code> — <code>hi</code> will not be <code>lo</code>‘s
+immediate successor. In that case we’ll have <code>lo &lt; mid</code> and can return at once.</p>
+
+        
+          <div class='highlight'><pre>  mid = (hi+lo)<span class="hljs-regexp">//</span><span class="hljs-number">2</span>
+  <span class="hljs-keyword">if</span> lo &lt; mid
+    <span class="hljs-keyword">return</span> appendAt(a, j, mid)</pre></div>
+        
+      
+        
+        <p>Let’s take stock of what we know when things are more difficult. Even if <code>mid
+== lo</code>, we know that <code>a &lt; c</code>, and since <code>j</code> is the first point at
+which they differ, we know that <code>a.substr(0, j+1)</code> is less than the
+equivalent substring of <code>c</code>.</p>
+<p>After adjusting <code>j</code> to point to the first character after the difference:</p>
+
+        
+          <div class='highlight'><pre>  j++</pre></div>
+        
+      
+        
+        <p>we can say that <code>a &lt; c.substr(0, j)</code>.  If <code>c</code>‘s length is greater than <code>j</code>,
+then we also know that <code>c.substr(0, j) &lt; c</code>.  So in fact <code>c.substr(0, j)</code> is
+between <code>a</code> and <code>c</code>, and we can return it as our new Betwixt string.</p>
+
+        
+          <div class='highlight'><pre>  <span class="hljs-keyword">if</span> j &lt; c.length
+    <span class="hljs-keyword">return</span> c.substr(<span class="hljs-number">0</span>, j)</pre></div>
+        
+      
+        
+        <p>On the other hand, if <code>j == c.length</code>, we find the first character of
+<code>a</code> that’s less than <code>MAX_CODE</code>, and take the midpoint between it and <code>BASE</code>.
+(The character might be a virtual <code>ZERO</code>, if all remaining actual characters
+of <code>a</code> are <code>MAX_CODE</code>.)</p>
+
+        
+          <div class='highlight'><pre>  j++ <span class="hljs-keyword">while</span> j &lt; L <span class="hljs-keyword">and</span> a.charCodeAt(j) == MAX_CODE
+  lo = <span class="hljs-keyword">if</span> j == L <span class="hljs-keyword">then</span> <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> a.charCodeAt(j)
+  <span class="hljs-keyword">return</span> appendAt(a, j, (BASE+lo)<span class="hljs-regexp">//</span><span class="hljs-number">2</span>)
+  <span class="hljs-keyword">return</span></pre></div>
+        
+      
+        
+        <h3 id="before">before</h3>
+<p>Our implementation of binary fractions has a representation of zero (the empty
+string), but no way to represent a number less than zero. So
+<code>Betwixt.before(&quot;&quot;)</code> throws an error.</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-function"><span class="hljs-title">before</span> = <span class="hljs-params">(s)</span> -&gt;</span>
+  s = validated(s) <span class="hljs-comment"># Reduce s to canonical form, throw error if empty</span></pre></div>
+        
+      
+        
+        <p>If <code>s</code> represents a positive fraction, we could return <code>Betwixt.between(&quot;&quot;,s)</code>.
+But in the case where most additions to a list occur at the beginning or end
+rather than in the middle, we’d be wasting space: the binary representation of
+<code>Betwixt.between(s,t)</code> takes on average one more bit than the binary
+representation of <code>s</code> or <code>t</code>. So adding 1000 items to the beginning of a list
+would result in the last item’s rank taking 125 bytes.</p>
+<p>Instead, <code>before</code> finds the first non-zero character <code>c</code> of <code>s</code> (which must
+exist because <code>s</code> is trimmed and non-empty). It returns the substring of <code>s</code> up
+to but not including <code>c</code>, followed by <code>c</code> decremented by 1. That way, if we
+start with a one-item list whose rank is <code>MIDPOINT</code> (<code>\u8000</code>) and add an
+additional 999 items, each at the beginning, all items will have a rank that
+can be represented by a single JavaScript character (in the range <code>\u7c19</code> to
+<code>MIDPOINT</code>).</p>
+
+        
+          <div class='highlight'><pre>  j = s.search(NONZERO)
+  decrement = s.charCodeAt(j)-<span class="hljs-number">1</span>
+  result = appendAt(s, j, decrement)</pre></div>
+        
+      
+        
+        <p>But we can’t return <code>result</code> quite yet — what if the first non-zero character
+of <code>s</code> is <code>\u0001</code>? Then the last character of <code>result</code> would be <code>ZERO</code> —
+<code>result</code> wouldn’t be a Betwixt string. In that case we need to append an
+additional non-zero character to <code>result</code> — <code>MIDPOINT</code> being a reasonable
+choice.</p>
+
+        
+          <div class='highlight'><pre>  result += MIDPOINT <span class="hljs-keyword">if</span> decrement == <span class="hljs-number">0</span>
+  <span class="hljs-keyword">return</span> result</pre></div>
+        
+      
+        
+        <h3 id="after">after</h3>
+<p>Adding an item at the end of the list is similar, but we look for characters we
+can increment — i.e., any but <code>MAX_CODE</code>.  But while our invariant guarantees
+that a Betwixt string ends with at least one nonzero character, it is perfectly
+possible to have a string which ends with a sequence of <code>MAX_CODE</code> characters.
+In that case we append <code>MIDPOINT</code>.</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-function"><span class="hljs-title">after</span> = <span class="hljs-params">(s)</span> -&gt;</span>
+  s = trim(s)
+  j = s.search(<span class="hljs-regexp">/[^\uffff]/</span>)
+  <span class="hljs-keyword">if</span> j == -<span class="hljs-number">1</span>
+    <span class="hljs-keyword">return</span> s + MIDPOINT
+  <span class="hljs-keyword">else</span>
+    <span class="hljs-keyword">return</span> appendAt(s, j, s.charCodeAt(j)+<span class="hljs-number">1</span>)</pre></div>
+        
+      
+        
+        <h3 id="tohex">toHex</h3>
+<p>The <code>toHex</code> method returns the hexadecimal representation of our string. To
+avoid dependencies, we roll our own converter rather than requiring any of the
+many Node modules that would make this a one-liner.</p>
+
+        
+          <div class='highlight'><pre>chars = [<span class="hljs-string">"0"</span>, <span class="hljs-string">"1"</span>, <span class="hljs-string">"2"</span>, <span class="hljs-string">"3"</span>, <span class="hljs-string">"4"</span>, <span class="hljs-string">"5"</span>, <span class="hljs-string">"6"</span>, <span class="hljs-string">"7"</span>, <span class="hljs-string">"8"</span>, <span class="hljs-string">"9"</span>,
+         <span class="hljs-string">"a"</span>, <span class="hljs-string">"b"</span>, <span class="hljs-string">"c"</span>, <span class="hljs-string">"d"</span>, <span class="hljs-string">"e"</span>, <span class="hljs-string">"f"</span>]
+<span class="hljs-function"><span class="hljs-title">hex4</span> = <span class="hljs-params">(n)</span> -&gt;</span>
+  h4 = []
+  <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> [<span class="hljs-number">1.</span><span class="hljs-number">.4</span>]
+    mod = n % <span class="hljs-number">16</span>
+    h4.unshift chars[mod]
+    n = (n - mod) / <span class="hljs-number">16</span>
+  h4.join <span class="hljs-string">""</span>
+<span class="hljs-function">
+<span class="hljs-title">toHex</span> = <span class="hljs-params">(s)</span> -&gt;</span>
+  hex = [];
+  j = <span class="hljs-number">0</span>;
+  <span class="hljs-keyword">while</span> j &lt; s.length
+    hex.push hex4 s.charCodeAt(j++)
+  <span class="hljs-keyword">return</span> (hex.join <span class="hljs-string">""</span>)</pre></div>
+        
+      
+        
+        <h3 id="exports">Exports</h3>
+
+        
+          <div class='highlight'><pre><span class="hljs-built_in">module</span>.exports = {
+  trim, before, after, between, validated, toHex
+  <span class="hljs-attribute">midpoint</span>: <span class="hljs-function">-&gt;</span> MIDPOINT
+}</pre></div>
+        
+      
+      <div class="fleur">h</div>
+    </div>
+  </div>
+</body>
+</html>
