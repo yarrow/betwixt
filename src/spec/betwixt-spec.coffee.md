@@ -3,23 +3,25 @@
 Here are the specs, using Jasmine and Jasmine-Given, very lightly commented
 
     path = require "path"
-    Betwixt = require path.join "..", "lib", "betwixt"
+    Betwixt = require path.join "..", "betwixt"
     require "jasmine-given"
 
-One quirk of Jasmine-Given is that it tries to execute the expressions in a
-failing comparison to produce an informative error message, which means that
-almost everything needs to be an instance variable. For instance, since
-Jasmine-Given hasn't required Betwixt, the result of Betwixt.foo(...) is
-`[Error: ReferenceError: Betwixt is not defined]`. Jasmine-Given *can* find
-instance variables, however, so we just say `@Betwixt = Betwixt`
+One quirk of Jasmine-Given is that when a test expression fails, it tries
+execute its subexpressions in order to produce an informative error message.
+That's great, but it means that the subexpressions need to be defined in
+Jasmine-Given's context, which is different from the original context. For
+instance, since Jasmine-Given hasn't required Betwixt, the result of
+Betwixt.foo(...) is `[Error: ReferenceError: Betwixt is not defined]`.
+Jasmine-Given *can* find instance variables, however, so the `Given -> @Betwixt
+= Betwixt` below fixes the problem.
 
-Similarly, Jasmine-Given needs the variables in expressions to be instance
-variables.
+tl;dr — Everything not defined globally independent of the test code needs to
+be an instance variable.
 
     describe "Betwixt", ->
-      zero = "\u0000"               # for use by expect()
       Given -> @Betwixt = Betwixt
       Given -> @zero = "\u0000"     # for use by Then ->
+      zero = "\u0000"               # for use by expect()
 
 Creation and description methods
 --------------------------------

@@ -1,14 +1,15 @@
 {
   "name": "betwixt",
-  "version": "0.1.0",
-  "description": "Rank/index for re-orderable lists",
-  "main": "index.js",
+  "version": "0.1.1",
+  "description": "String rank for re-orderable lists",
+  "main": "betwixt.js",
   "scripts": {
-    "test": "gulp spec"
+    "test": "gulp spec",
+    "prepublish": "gulp spec"
   },
   "repository": {
     "type": "git",
-    "url": "git//github.com/yarrow/dlo.git"
+    "url": "https://github.com/yarrow/betwixt.git"
   },
   "keywords": [
     "dense",
@@ -16,7 +17,11 @@
     "order",
     "database",
     "list",
-    "order"
+    "string",
+    "before",
+    "after",
+    "between",
+    "reorder"
   ],
   "author": "Yarrow Angelweed",
   "license": "ISC",

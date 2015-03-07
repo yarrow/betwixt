@@ -6,12 +6,12 @@ istanbul = require "gulp-istanbul"
 
 gulp.task "default", ["coffee"]
 
-gulp.task "coffee", ["lib-coffee", "spec-coffee"]
+gulp.task "coffee", ["module-coffee", "spec-coffee"]
 
-gulp.task "lib-coffee", ->
+gulp.task "module-coffee", ->
   gulp.src "src/lib/*.coffee*"
     .pipe coffee({bare:false}).on("error", (error) -> gutil.log error.stack)
-    .pipe(gulp.dest "lib")
+    .pipe(gulp.dest ".")
 
 gulp.task "spec-coffee", ->
   gulp.src "src/spec/*.coffee*"

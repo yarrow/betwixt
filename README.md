@@ -9,7 +9,8 @@
     - a string greater than `t` and less than `s` if `t < s`, and
     - `s` if `s` and `t` are equal.
 
-(We say a *subset* of JavaScript strings because Betwixt strings are nonempty and have no trailing null (`\u0000`) characters.)
+(We say a *subset* of JavaScript strings because Betwixt strings are nonempty
+and have no trailing null (`\u0000`) characters.)
 
 The use case is this: suppose we have a reorderable list — an ordered list
 where the order can be manually changed by the user. Furthermore, each list
@@ -43,6 +44,18 @@ annotated [CoffeeScript source](src/lib/betwixt.coffee.md) for information
 about how it's done. The [specs](src/spec/betwixt-spec.coffee.md) may also be
 informative.
 
+## Other Methods
+
+* `Betwixt.trim(s)` returns `s` with trailing null characters removed
+* `Betwixt.validated(s)` is like `Betwixt.trim(s)`, but throws an error if the
+  result would be the empty string
+* `Betwixt.toHex(s)` returns a hexadecimal representation of `s`.
+* `Betwixt.midpoint()` returns a string that's a good initial value for the
+  rank of the item in a one-item list — representations of the values above
+  and below the midpoint are equally space-efficient.
+
+## Warning
+
 One caveat: using Betwixt strings, we can do almost unlimited numbers of the
 insertions described above; but if we do, say a million of them, then the
 `new1000000.order` string will be something like 125,000 bytes long. Things
@@ -51,3 +64,8 @@ likely to be more random in real-world applications. And Betwixt tries to
 minimize string explosion where it can. In particular, the before and after
 methods optimize the common cases where an item is inserted at the beginning or
 end of a list.
+
+## See also
+
+Dominic Tarr's [between](https://www.npmjs.com/package/between) npm module
+is very similar to Betwixt, though less space-efficient.
