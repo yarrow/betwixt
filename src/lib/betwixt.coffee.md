@@ -110,6 +110,16 @@ implementation of a dense linear order should be restricted to lists with an
 expected maximum item count in the tens of thousands or less, and a similar
 expected maximum number of insertions or re-orderings.
 
+### Preliminary Throat-Clearing
+
+Setting things up to work with either Node or the browser.
+
+    root = @
+    previous_Betwixt = root.Betwixt
+    noConflict = ->
+      root.Betwixt = previous_Betwixt
+      Betwixt
+
 ### Making Betwixt strings
 
 Given that Javascript's native character set is UCS-2, we're actually going to
@@ -179,6 +189,8 @@ The workhorse method is `between`: `Betwixt.between(a,c)` returns a Betwixt
 string between `a` and `c`.
 
     between = (a, c) ->
+      return before(c) unless a?
+      return after(a) unless c?
       a = trim(a); c = trim(c)   # Ensure canonical form
       return a if a == c
       [a, c] = [c, a] if c < a
@@ -304,7 +316,13 @@ many Node modules that would make this a one-liner.
 
 ### Exports
 
-    module.exports = {
-      trim, before, after, between, validated, toHex
+    Betwixt = {
+      trim, before, after, between, validated, toHex, noConflict
       midpoint: -> MIDPOINT
     }
+
+    if exports?
+      module.exports = Betwixt if module?
+      exports.Betwixt = Betwixt
+    else
+      root.Betwixt = Betwixt

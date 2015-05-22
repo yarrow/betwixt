@@ -1,11 +1,11 @@
 {
   "name": "betwixt",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "String rank for re-orderable lists",
   "main": "betwixt.js",
   "scripts": {
     "test": "gulp spec",
-    "prepublish": "gulp spec"
+    "prepublish": "gulp prepublish"
   },
   "repository": {
     "type": "git",

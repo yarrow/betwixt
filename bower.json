@@ -1,0 +1,37 @@
+{
+  "name": "betwixt",
+  "description": "String rank for re-orderable lists",
+  "version": "0.2.0",
+  "main": "betwixt.js",
+  "moduleType": [
+    "node",
+    "globals"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "dense",
+    "linear",
+    "order",
+    "database",
+    "list",
+    "string",
+    "before",
+    "after",
+    "between",
+    "reorder"
+  ],
+  "authors": [
+    "Yarrow Angelweed"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yarrow/betwixt.git"
+  },
+  "ignore": [
+    "**/.*",
+    "/node_modules/",
+    "/bower_components/",
+    "/coverage/",
+    "/src/"
+  ]
+}

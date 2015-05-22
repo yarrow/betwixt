@@ -113,6 +113,12 @@ The between method
         describe "the order of operands doesn't matter", ->
           Then -> @Betwixt.between(@b, @a) == @Betwixt.between(@a, @b)
           Then -> @Betwixt.between(@c, @a) == @Betwixt.between(@a, @c)
+          describe "...except that between(undefined, x) = before(x)", ->
+            Given -> @a = undefined
+            Then  -> @Betwixt.between(@a, @c) == @Betwixt.before(@c)
+          describe "...and between(x, undefined) = after(x)", ->
+            Given -> @c = undefined
+            Then  -> @Betwixt.between(@a, @c) == @Betwixt.after(@a)
         describe "slightly less easy parts", ->
           Given -> @aa = @a+"\u3333"
           Given -> @cc = @c+"\uffff"
