@@ -1,6 +1,6 @@
 {
   "name": "betwixt",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "String rank for re-orderable lists",
   "main": "betwixt.js",
   "scripts": {

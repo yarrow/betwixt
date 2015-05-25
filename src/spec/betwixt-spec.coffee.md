@@ -113,12 +113,6 @@ The between method
         describe "the order of operands doesn't matter", ->
           Then -> @Betwixt.between(@b, @a) == @Betwixt.between(@a, @b)
           Then -> @Betwixt.between(@c, @a) == @Betwixt.between(@a, @c)
-          describe "...except that between(undefined, x) = before(x)", ->
-            Given -> @a = undefined
-            Then  -> @Betwixt.between(@a, @c) == @Betwixt.before(@c)
-          describe "...and between(x, undefined) = after(x)", ->
-            Given -> @c = undefined
-            Then  -> @Betwixt.between(@a, @c) == @Betwixt.after(@a)
         describe "slightly less easy parts", ->
           Given -> @aa = @a+"\u3333"
           Given -> @cc = @c+"\uffff"
@@ -165,3 +159,10 @@ The between method
           Given -> @hi = "\uaaaa\u1235"
           Then  -> @Betwixt.between(@hi, @lo) ==
                       "\uaaaa\u1234\uffff\uffff\u8000"
+        describe "If s is a prefix of t, then between acts as if s were
+            extended by a ZERO character.", ->
+          Given -> @lo = "\uaaaa"
+          Given -> @hi = "\uaaaa\u8000" 
+          Given -> @just_higher = "\uaaaa\u0001"
+          Then  -> @Betwixt.between(@lo, @hi) == "\uaaaa\u4000"
+          Then  -> @Betwixt.between(@lo, @just_higher) == "\uaaaa\u0000\u8000"

@@ -40,12 +40,6 @@
 
   between = function(a, c) {
     var L, hi, j, lo, mid, ref;
-    if (a == null) {
-      return before(c);
-    }
-    if (c == null) {
-      return after(a);
-    }
     a = trim(a);
     c = trim(c);
     if (a === c) {
@@ -58,6 +52,10 @@
     j = 0;
     while (j < L && a.charAt(j) === c.charAt(j)) {
       j++;
+    }
+    if (j === L && j < c.length) {
+      a += ZERO;
+      L++;
     }
     lo = a.charCodeAt(j);
     hi = c.charCodeAt(j);

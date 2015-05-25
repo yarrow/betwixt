@@ -189,8 +189,6 @@ The workhorse method is `between`: `Betwixt.between(a,c)` returns a Betwixt
 string between `a` and `c`.
 
     between = (a, c) ->
-      return before(c) unless a?
-      return after(a) unless c?
       a = trim(a); c = trim(c)   # Ensure canonical form
       return a if a == c
       [a, c] = [c, a] if c < a
@@ -202,6 +200,17 @@ is less than) `hi` (`c.charAt(j)`).
       L = a.length
       j = 0
       j++ while j < L and a.charAt(j) == c.charAt(j)
+
+Well, `j` is the first index such that `lo` differs from `hi` unless `a` is
+a prefix of `c`, in which case we force the condition we want to be true by
+adding a `ZERO` character to the end of `a`:
+
+      if j == L and j < c.length
+        a += ZERO
+        L++
+
+Now we can set `lo` and `hi`:
+
       lo = a.charCodeAt(j)
       hi = c.charCodeAt(j)
 
